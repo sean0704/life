@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>VT ETF 投資理財模擬器</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family:"微軟正黑體", sans-serif; background:#f5f5f5; padding:20px;}
+#game { max-width:900px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+button { margin:6px; padding:8px 12px; border:none; border-radius:8px; cursor:pointer;}
+#pauseBtn { background:#ff5722; color:#fff; }
+#resumeBtn { background:#4caf50; color:#fff; }
+#actions input[type=number] { width:100px; }
+#log { white-space: pre-line; margin-top:15px; height:150px; overflow-y:auto; border:1px solid #ddd; padding:8px; border-radius:8px; background:#fafafa;}
+canvas { margin-top:20px;}
+</style>
+</head>
+<body>
+<div id="game">
+<h2>VT ETF 投資理財模擬器</h2>
+<div id="status"></div>
+<div>
+<button id="pauseBtn">暫停時間</button>
+<button id="resumeBtn">繼續時間</button>
+</div>
+<div id="actions" style="margin-top:10px;"></div>
+<div id="log"></div>
+<canvas id="moneyChart" height="120"></canvas>
+</div>
+
+<script>
+// 歷史月報酬率數據（示範數據，可自行更新完整歷史）
+const historicalReturns = [0.012, -0.005, 0.008, -0.002, 0.015, -0.003, 0.010, -0.001, 0.007, -0.004];
+
+// 玩家初始狀態
+let player = {
+  name:"玩家",
+  age:25,
+  month:1,
+  salary:60000,
+  basicExpense:35000,
+  money:200000,
+  investCash:0,
+  monthlyInvest:0,
+  investCost:0 // 累計投資成本
+};
+
+let history = { money:[player.money + player.investCash], months:[player.month], investHistory:[0], events:[] };
+
+let logEl = document.getElementById("log");
+let statusEl = document.getElementById("status");
+let actionsEl = document.getElementById("actions");
+let pauseBtn = document.getElementById("pauseBtn");
+let resumeBtn = document.getElementById("resumeBtn");
+
+function log(text){ logEl.innerText = text + "\n" + logEl.innerText; }
+
+// 更新狀態
+function updateStatus(){
+  let netWorth = player.money + player.investCash;
+  let investProfit = player.investCash - player.investCost; // 投資損益
+  let investProfitRate = player.investCost > 0 ? (investProfit / player.investCost * 100).toFixed(2) : 0;
+
+  statusEl.innerHTML = `
+  <b>${player.name}</b> | 年齡: ${player.age} 歲 ${player.month} 月<br>
+  薪水: NT$${player.salary.toLocaleString()} | 固定支出: NT$${player.basicExpense.toLocaleString()}<br>
+  現金: NT$${player.money.toLocaleString()} | 投資總資產: NT$${player.investCash.toLocaleString()}<br>
+  投資總成本: NT$${player.investCost.toLocaleString()} | 投資損益金額: NT$${investProfit.toLocaleString()} | 投資損益率: ${investProfitRate}%<br>
+  淨值: NT$${netWorth.toLocaleString()}<br>
+  本月投資金額: NT$${player.monthlyInvest?.toLocaleString() || 0}
+  `;
+}
+
+// Chart.js 初始化
+const ctx = document.getElementById("moneyChart").getContext("2d");
+const moneyChart = new Chart(ctx,{
+  type:"line",
+  data:{ labels:[player.month], datasets:[{label:"淨值變化", data:[player.money + player.investCash], borderColor:"blue", fill:false, tension:0.2}] },
+  options:{ responsive:true, scales:{ y:{ beginAtZero:true, ticks:{ callback:value=>"NT$"+value.toLocaleString() } } } }
+});
+
+// 投資金額 & 自訂收入/支出面板
+function renderActions(){
+  actionsEl.innerHTML = `
+    <label>每月薪水: <input type="number" id="salaryInput" value="${player.salary}"></label>
+    <label>固定支出: <input type="number" id="expenseInput" value="${player.basicExpense}"></label>
+    <label>本月投資金額: <input type="number" id="investInput" value="0" min="0"></label>
+    <button id="applyBtn">確認決策</button>
+  `;
+  document.getElementById("applyBtn").addEventListener("click", applyDecisions);
+}
+
+function applyDecisions(){
+  let salary = parseFloat(document.getElementById("salaryInput").value);
+  let expense = parseFloat(document.getElementById("expenseInput").value);
+  let monthlyInvest = parseFloat(document.getElementById("investInput").value);
+
+  if(monthlyInvest < 0){
+    alert("投資金額不能為負數");
+    return;
+  }
+  if(monthlyInvest > salary){
+    alert("投資金額不能超過薪水");
+    return;
+  }
+
+  player.salary = salary;
+  player.basicExpense = expense;
+  player.monthlyInvest = monthlyInvest;
+
+  log(`本月決策設定: 薪水 ${salary}, 固定支出 ${expense}, 投資 ${monthlyInvest}`);
+  updateStatus();
+}
+
+// 時間流
+let interval = null;
+function startTimeFlow(){ 
+  if(interval) return; 
+  interval = setInterval(nextMonth,500); 
+}
+function pauseTimeFlow(){ 
+  clearInterval(interval); 
+  interval = null; 
+}
+pauseBtn.addEventListener("click", pauseTimeFlow);
+resumeBtn.addEventListener("click", startTimeFlow);
+
+// 每月計算
+function nextMonth(){
+  let totalIncome = player.salary;
+
+  // 使用歷史月報酬率模擬 VT ETF 投資收益
+  let randomIndex = Math.floor(Math.random() * historicalReturns.length);
+  let vtMonthlyReturn = historicalReturns[randomIndex];
+  let investReturn = Math.floor(player.investCash * vtMonthlyReturn);
+
+  let investThisMonth = player.monthlyInvest || 0;
+
+  player.money += totalIncome - player.basicExpense - investThisMonth;
+  player.investCash += investThisMonth + investReturn;
+  player.investCost += investThisMonth; // 累計投資成本
+
+  if(player.month==12){ player.age++; player.month=1; } else player.month++;
+
+  let netWorth = player.money + player.investCash;
+  history.money.push(netWorth);
+  history.months.push(player.age*12+player.month);
+  history.investHistory.push(player.investCash);
+  history.events.push(`月 ${player.age}-${player.month}: 本月投資 ${investThisMonth}, 投資總額 ${player.investCash}, 投資總成本 ${player.investCost}, 淨值 ${netWorth}`);
+
+  moneyChart.data.labels.push(`Y${player.age}M${player.month}`);
+  moneyChart.data.datasets[0].data.push(netWorth);
+  moneyChart.update();
+
+  updateStatus();
+  log(history.events[history.events.length-1]);
+}
+
+// 初始化
+updateStatus();
+renderActions();
+startTimeFlow(); // 一開始就流動
+</script>
+</body>
+</html>
+
