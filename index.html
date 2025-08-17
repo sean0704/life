@@ -72,6 +72,32 @@
                 </div>
             </section>
 
+            <!-- 初始設定 -->
+            <section class="initial-settings-section">
+                <h3>🎯 初始設定</h3>
+                <div class="input-group">
+                    <div class="input-item">
+                        <label for="initialMoneyInput">💰 初始現金</label>
+                        <input type="number" id="initialMoneyInput" value="200000" min="0" max="10000000" step="10000" placeholder="輸入初始現金">
+                        <small>建議：NT$50,000 - NT$500,000</small>
+                    </div>
+                    <div class="input-item">
+                        <label for="fireTargetInput">🔥 FIRE目標</label>
+                        <input type="number" id="fireTargetInput" value="10000000" min="1000000" max="100000000" step="100000" placeholder="輸入FIRE目標">
+                        <small>建議：NT$5,000,000 - NT$20,000,000</small>
+                    </div>
+                    <div class="input-item">
+                        <label for="retireAgeInput">⏰ 退休年齡</label>
+                        <input type="number" id="retireAgeInput" value="65" min="45" max="80" step="1" placeholder="輸入退休年齡">
+                        <small>建議：45 - 80歲</small>
+                    </div>
+                </div>
+                <div class="settings-actions">
+                    <button id="resetSettingsBtn" class="secondary-btn">🔄 重置為預設值</button>
+                    <button id="applySettingsBtn" class="primary-btn">✅ 套用設定</button>
+                </div>
+            </section>
+
             <!-- 操作按鈕 -->
             <section class="actions-section">
                 <h3>⚙️ 操作</h3>

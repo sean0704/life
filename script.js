@@ -48,7 +48,16 @@ let interval = null;
 let currentChartType = 'wealth';
 
 // DOM 元素
-let logEl, statusGrid, eventsSection, speedIndicator, ctx, toggleTimeBtn, salaryInput, expenseInput, investInput, allInputs;
+const logEl = document.getElementById("log");
+const statusGrid = document.getElementById("statusGrid");
+const eventsSection = document.getElementById("eventsSection");
+const speedIndicator = document.getElementById("speedIndicator");
+const ctx = document.getElementById("moneyChart").getContext("2d");
+const toggleTimeBtn = document.getElementById("toggleTimeBtn");
+const salaryInput = document.getElementById("salaryInput");
+const expenseInput = document.getElementById("expenseInput");
+const investInput = document.getElementById("investInput");
+const allInputs = [salaryInput, expenseInput, investInput];
 let moneyChart;
 
 
@@ -129,29 +138,6 @@ function buildChart(type) {
         maintainAspectRatio: false,
         animation: {
             duration: 0 // 關閉動畫以提升效能
-        },
-        plugins: {
-            legend: { 
-                display: true, 
-                position: 'top',
-                labels: {
-                    boxWidth: 12,
-                    padding: 10,
-                    font: {
-                        size: window.innerWidth < 768 ? 10 : 12
-                    }
-                }
-            },
-            tooltip: {
-                mode: 'index',
-                intersect: false,
-                titleFont: {
-                    size: window.innerWidth < 768 ? 12 : 14
-                },
-                bodyFont: {
-                    size: window.innerWidth < 768 ? 11 : 13
-                }
-            }
         }
     };
 
@@ -338,10 +324,9 @@ function nextMonth() {
     }
     
     if (player.month === 12) {
-        // 固定年終獎金1.5個月
-        const yearBonus = Math.floor(player.salary * 1.5);
+        const yearBonus = player.salary * (1 + Math.random());
         player.money += yearBonus;
-        log(`年終獎金 ${formatMoney(yearBonus)} (1.5個月)`, 'event');
+        log(`年終獎金 ${formatMoney(yearBonus)}`, 'event');
     }
     
     const totalIncome = player.salary;
@@ -358,9 +343,6 @@ function nextMonth() {
     player.investCash += investThisMonth + investReturn + dividends;
     player.investCost += investThisMonth;
     
-    // 只有當有投資資產時才記錄投資報酬率
-    const actualMonthlyReturn = player.investCash > 0 ? monthlyReturn : 0;
-    
     if (player.totalMonths % 3 === 0) checkMarketEvents();
     
     if (player.month === 12) {
@@ -374,9 +356,9 @@ function nextMonth() {
     history.money.push(netWorth);
     history.investHistory.push(player.investCash);
     history.months.push(player.totalMonths);
-    history.monthlyReturns.push(actualMonthlyReturn);
+    history.monthlyReturns.push(monthlyReturn);
 
-    // 每年結束時計算年度報酬率並暫停遊戲
+    // 每年結束時計算年度報酬率
     if (player.month === 1 && player.totalMonths > 0 && player.totalMonths % 12 === 0) {
         const last12Returns = history.monthlyReturns.slice(-12);
         const annualReturn = last12Returns.reduce((acc, r) => acc * (1 + r), 1) - 1;
@@ -388,16 +370,12 @@ function nextMonth() {
         if (currentChartType === 'performance') {
             buildChart('performance');
         }
-        
-        // 年度結束時自動暫停並顯示年度回顧
-        pauseTimeFlow();
-        showAnnualReview();
     }
     
     updateStatus();
     buildChart(currentChartType);
     
-    const returnStr = player.investCash > 0 ? formatPercent(monthlyReturn) : '無投資';
+    const returnStr = formatPercent(monthlyReturn);
     log(`投資 ${formatMoney(investThisMonth)}, 報酬 ${returnStr}, 淨值 ${formatMoney(netWorth)}`);
     
     if (netWorth >= player.fireTarget) {
@@ -428,336 +406,62 @@ function pauseTimeFlow() {
     setInputsDisabled(false);
 }
 
-
-
-
-
-
-
-
-// 年度回顧和理財決策功能
-function showAnnualReview() {
-    const lastYear = player.age - 1;
-    const last12Returns = history.monthlyReturns.slice(-12);
-    
-    // 計算實際投資報酬率（基於投資成本）
-    const netWorth = player.money + player.investCash;
-    const investProfit = player.investCash - player.investCost;
-    const investProfitRate = player.investCost > 0 ? (investProfit / player.investCost) : 0;
-    
-    // 年度投資報酬率（基於實際投資成本計算）
-    const annualReturn = player.investCost > 0 ? 
-        (investProfit / player.investCost) : 0;
-    
-    // 計算年度統計
-    const yearStartNetWorth = history.money[history.money.length - 13] || netWorth;
-    const yearGrowth = netWorth - yearStartNetWorth;
-    const yearGrowthRate = yearStartNetWorth > 0 ? (yearGrowth / yearStartNetWorth) : 0;
-    
-    // 創建年度回顧面板
-    const reviewHTML = `
-        <div class="annual-review-overlay" id="annualReviewOverlay">
-            <div class="annual-review-modal">
-                <div class="annual-review-header">
-                    <h2>📊 ${lastYear}歲年度回顧</h2>
-                    <button class="close-btn" onclick="closeAnnualReview()">✕</button>
-                </div>
-                
-                <div class="annual-review-content">
-                    <div class="review-stats">
-                        <div class="stat-card">
-                            <h4>💰 年度淨值變化</h4>
-                            <div class="value ${yearGrowth >= 0 ? 'profit' : 'loss'}">
-                                ${formatMoney(yearGrowth)} (${formatPercent(yearGrowthRate)})
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <h4>📈 投資報酬率</h4>
-                            <div class="value ${annualReturn >= 0 ? 'profit' : 'loss'}">
-                                ${player.investCost > 0 ? formatPercent(annualReturn) : '無投資'}
-                            </div>
-                            <small>${player.investCost > 0 ? `成本: ${formatMoney(player.investCost)}` : ''}</small>
-                        </div>
-                        <div class="stat-card">
-                            <h4>💎 總淨值</h4>
-                            <div class="value">${formatMoney(netWorth)}</div>
-                        </div>
-                        <div class="stat-card">
-                            <h4>🎯 FIRE進度</h4>
-                            <div class="value">${(netWorth / player.fireTarget * 100).toFixed(1)}%</div>
-                        </div>
-                    </div>
-                    
-                    <div class="financial-advice">
-                        <h3>💡 理財建議</h3>
-                        <div class="advice-content">
-                            ${generateFinancialAdvice(yearGrowthRate, investProfitRate, player.money, player.investCash)}
-                        </div>
-                    </div>
-                    
-                    <div class="decision-panel">
-                        <h3>⚙️ 年度理財決策</h3>
-                        <div class="decision-options">
-                            <div class="decision-group">
-                                <label>💰 調整每月投資金額</label>
-                                <input type="number" id="newMonthlyInvest" value="${player.monthlyInvest}" min="0" step="1000">
-                            </div>
-                            <div class="decision-group">
-                                <label>📊 調整固定支出</label>
-                                <input type="number" id="newExpense" value="${player.basicExpense}" min="0" step="1000">
-                            </div>
-                            <div class="decision-group">
-                                <label>💸 贖回投資金額</label>
-                                <input type="number" id="withdrawAmount" value="0" min="0" max="${player.investCash}" step="10000">
-                            </div>
-                        </div>
-                        <div class="decision-buttons">
-                            <button class="decision-btn primary" onclick="applyAnnualDecisions()">✅ 確認決策</button>
-                            <button class="decision-btn secondary" onclick="skipAnnualDecisions()">⏭️ 保持現狀</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', reviewHTML);
-    
-    // 記錄年度回顧
-    log(`📊 ${lastYear}歲年度回顧：淨值變化 ${formatMoney(yearGrowth)} (${formatPercent(yearGrowthRate)})`, 'event');
-}
-
-function closeAnnualReview() {
-    const overlay = document.getElementById('annualReviewOverlay');
-    if (overlay) {
-        overlay.remove();
-    }
-}
-
-function generateFinancialAdvice(growthRate, profitRate, cash, investCash) {
-    let advice = [];
-    
-    if (growthRate < -0.1) {
-        advice.push('⚠️ 年度表現不佳，建議檢視投資策略');
-    } else if (growthRate > 0.2) {
-        advice.push('🎉 年度表現優異，可考慮增加投資');
-    }
-    
-    if (cash < 50000) {
-        advice.push('💡 現金儲備偏低，建議增加緊急預備金');
-    }
-    
-    // 投資相關建議
-    if (investCash > 0) {
-        if (profitRate < -0.15) {
-            advice.push('📉 投資虧損較大，可考慮調整資產配置');
-        }
-        
-        const investRatio = investCash / (cash + investCash);
-        if (investRatio < 0.3) {
-            advice.push('📈 投資比例偏低，可考慮增加投資金額');
-        } else if (investRatio > 0.8) {
-            advice.push('💰 投資比例過高，建議保留更多現金');
-        }
+// 事件監聽
+toggleTimeBtn.addEventListener("click", () => {
+    if (interval) {
+        pauseTimeFlow();
     } else {
-        // 沒有投資時的建議
-        if (cash > 100000) {
-            advice.push('📈 現金充足，建議開始投資理財');
-        } else if (cash > 50000) {
-            advice.push('💡 可考慮將部分現金投入投資');
-        }
+        startTimeFlow();
     }
-    
-    if (advice.length === 0) {
-        advice.push('✅ 財務狀況良好，保持現有策略');
-    }
-    
-    return advice.map(item => `<div class="advice-item">${item}</div>`).join('');
-}
+});
 
-function applyAnnualDecisions() {
-    const newMonthlyInvest = parseFloat(document.getElementById('newMonthlyInvest').value) || 0;
-    const newExpense = parseFloat(document.getElementById('newExpense').value) || 0;
-    const withdrawAmount = parseFloat(document.getElementById('withdrawAmount').value) || 0;
-    
-    // 應用決策
-    if (newMonthlyInvest >= 0) {
-        player.monthlyInvest = newMonthlyInvest;
-        updateDisabledInputValue(investInput, newMonthlyInvest);
-        log(`年度決策：每月投資調整為 ${formatMoney(newMonthlyInvest)}`);
+document.getElementById("speedControl").addEventListener("click", function() {
+    gameSpeed = gameSpeed === 1 ? 2 : gameSpeed === 2 ? 4 : 1;
+    speedIndicator.textContent = `速度: ${gameSpeed}x`;
+    if (interval) { // 如果正在運行，則重設間隔以更新速度
+        pauseTimeFlow();
+        startTimeFlow();
     }
-    
-    if (newExpense >= 0) {
-        player.basicExpense = newExpense;
-        updateDisabledInputValue(expenseInput, newExpense);
-        log(`年度決策：固定支出調整為 ${formatMoney(newExpense)}`);
-    }
-    
-    if (withdrawAmount > 0 && withdrawAmount <= player.investCash) {
-        player.investCash -= withdrawAmount;
-        player.money += withdrawAmount;
-        log(`年度決策：贖回投資 ${formatMoney(withdrawAmount)}`);
-    }
-    
-    closeAnnualReview();
+});
+
+salaryInput.addEventListener("change", (e) => {
+    player.salary = parseFloat(e.target.value) || 0;
+    log(`薪水更新為: ${formatMoney(player.salary)}`);
     updateStatus();
-    buildChart(currentChartType);
-    
-    // 詢問是否繼續遊戲
-    if (confirm('年度決策已應用！是否繼續時間流？')) {
-        startTimeFlow();
+});
+
+expenseInput.addEventListener("change", (e) => {
+    player.basicExpense = parseFloat(e.target.value) || 0;
+    log(`固定支出更新為: ${formatMoney(player.basicExpense)}`);
+    updateStatus();
+});
+
+investInput.addEventListener("change", (e) => {
+    const newInvest = parseFloat(e.target.value) || 0;
+    if (newInvest < 0) {
+        alert("投資金額不能為負數");
+        e.target.value = player.monthlyInvest; // 還原為舊值
+        return;
     }
-}
+    player.monthlyInvest = newInvest;
+    log(`每月投資更新為: ${formatMoney(player.monthlyInvest)}`);
+    updateStatus();
+});
 
-function skipAnnualDecisions() {
-    closeAnnualReview();
-    log('年度決策：保持現有策略');
-    
-    // 詢問是否繼續遊戲
-    if (confirm('保持現有策略！是否繼續時間流？')) {
-        startTimeFlow();
-    }
-}
-
-// 行動裝置優化功能
-function addMobileOptimizations() {
-    // 防止雙擊縮放
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function (event) {
-        const now = (new Date()).getTime();
-        if (now - lastTouchEnd <= 300) {
-            event.preventDefault();
-        }
-        lastTouchEnd = now;
-    }, false);
-
-    // 防止滾動時縮放
-    document.addEventListener('gesturestart', function (e) {
-        e.preventDefault();
-    });
-
-    // 圖表容器觸控優化
-    const chartContainer = document.querySelector('.chart-container');
-    if (chartContainer) {
-        chartContainer.style.touchAction = 'pan-x pan-y';
-    }
-
-    // 為按鈕添加觸控反饋
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(button => {
-        button.addEventListener('touchstart', function() {
-            this.style.transform = 'scale(0.95)';
-        });
-        
-        button.addEventListener('touchend', function() {
-            this.style.transform = '';
-        });
-    });
-
-    // 響應式圖表更新
-    window.addEventListener('resize', function() {
-        if (moneyChart) {
-            moneyChart.resize();
-        }
-    });
-}
 
 // 初始化
 function init() {
-    // 初始化DOM元素
-    logEl = document.getElementById("log");
-    statusGrid = document.getElementById("statusGrid");
-    eventsSection = document.getElementById("eventsSection");
-    speedIndicator = document.getElementById("speedIndicator");
-    ctx = document.getElementById("moneyChart").getContext("2d");
-    toggleTimeBtn = document.getElementById("toggleTimeBtn");
-    salaryInput = document.getElementById("salaryInput");
-    expenseInput = document.getElementById("expenseInput");
-    investInput = document.getElementById("investInput");
-    allInputs = [salaryInput, expenseInput, investInput];
-    
     // 重置為初始狀態
     history.money = [player.money + player.investCash];
     history.investHistory = [player.investCash];
     history.months = [0];
     history.monthlyReturns = [];
     history.annualReturns = [];
-    log("🎮 遊戲準備就緒！");
-    log("💡 請先設定您的薪資、支出和投資金額");
-    log("▶️ 點擊「開始時間」按鈕開始您的投資理財之旅");
+    log("遊戲開始！25歲的你開始投資理財之旅");
     
     updateStatus();
     buildChart(currentChartType);
-    // 不自動開始時間流，讓使用者手動控制
-    
-    // 添加事件監聽器
-    toggleTimeBtn.addEventListener("click", () => {
-        if (interval) {
-            pauseTimeFlow();
-        } else {
-            startTimeFlow();
-        }
-    });
-
-    document.getElementById("speedControl").addEventListener("click", function() {
-        gameSpeed = gameSpeed === 1 ? 2 : gameSpeed === 2 ? 4 : 1;
-        speedIndicator.textContent = `速度: ${gameSpeed}x`;
-        if (interval) { // 如果正在運行，則重設間隔以更新速度
-            pauseTimeFlow();
-            startTimeFlow();
-        }
-    });
-
-    document.getElementById("annualReviewBtn").addEventListener("click", function() {
-        pauseTimeFlow();
-        showAnnualReview();
-    });
-
-    salaryInput.addEventListener("change", (e) => {
-        player.salary = parseFloat(e.target.value) || 0;
-        log(`薪水更新為: ${formatMoney(player.salary)}`);
-        updateStatus();
-    });
-
-    expenseInput.addEventListener("change", (e) => {
-        player.basicExpense = parseFloat(e.target.value) || 0;
-        log(`固定支出更新為: ${formatMoney(player.basicExpense)}`);
-        updateStatus();
-    });
-
-    investInput.addEventListener("change", (e) => {
-        const newInvest = parseFloat(e.target.value) || 0;
-        if (newInvest < 0) {
-            alert("投資金額不能為負數");
-            e.target.value = player.monthlyInvest; // 還原為舊值
-            return;
-        }
-        player.monthlyInvest = newInvest;
-        log(`每月投資更新為: ${formatMoney(player.monthlyInvest)}`);
-        updateStatus();
-    });
-
-    document.getElementById("withdrawBtn").addEventListener("click", function() {
-        if (player.investCash <= 0) {
-            alert("沒有可贖回的投資");
-            return;
-        }
-        
-        const amount = prompt(`請輸入贖回金額 (可贖回: ${formatMoney(player.investCash)})`);
-        if (amount === null) return;
-        
-        const withdrawAmount = Math.min(parseFloat(amount), player.investCash);
-        if (withdrawAmount > 0) {
-            player.investCash -= withdrawAmount;
-            player.money += withdrawAmount;
-            log(`贖回投資 ${formatMoney(withdrawAmount)}`);
-            updateStatus();
-            buildChart(currentChartType);
-        }
-    });
-    
-    // 添加行動裝置優化
-    addMobileOptimizations();
+    startTimeFlow();
 }
 
 init();
