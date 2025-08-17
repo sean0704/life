@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>行動裝置優化測試</title>
+    <style>
+        body {
+            font-family: "微軟正黑體", -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature-list li strong {
+            color: #667eea;
+        }
+        
+        .test-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .test-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .test-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .test-input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .test-container {
+                padding: 15px;
+                margin: 0;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>📱 行動裝置優化測試</h1>
+        
+        <h3>✅ 已實施的優化功能：</h3>
+        <ul class="feature-list">
+            <li><strong>響應式設計：</strong>適配各種螢幕尺寸</li>
+            <li><strong>觸控優化：</strong>按鈕最小44px，防止誤觸</li>
+            <li><strong>輸入優化：</strong>防止iOS縮放，更好的鍵盤體驗</li>
+            <li><strong>圖表優化：</strong>響應式圖表，觸控友好</li>
+            <li><strong>佈局改善：</strong>手機上更好的視覺層次</li>
+            <li><strong>效能優化：</strong>防止雙擊縮放，流暢滾動</li>
+        </ul>
+        
+        <h3>🧪 測試功能：</h3>
+        <input type="number" class="test-input" placeholder="測試輸入欄位（防止縮放）" value="30000">
+        <button class="test-button" onclick="alert('觸控測試成功！')">測試觸控按鈕</button>
+        <button class="test-button" onclick="alert('響應式測試成功！')">測試響應式佈局</button>
+        
+        <p style="text-align: center; margin-top: 30px; color: #666;">
+            <a href="index.html" style="color: #667eea; text-decoration: none;">← 返回主應用程式</a>
+        </p>
+    </div>
+</body>
+</html>

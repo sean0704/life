@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>調試頁面</title>
+</head>
+<body>
+    <h1>JavaScript 調試</h1>
+    <div id="debug"></div>
+    
+    <script>
+        // 檢查基本功能
+        console.log('調試開始...');
+        
+        // 檢查DOM加載
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM已加載');
+            document.getElementById('debug').innerHTML = 'DOM加載成功';
+        });
+        
+        // 檢查錯誤
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript錯誤:', e.error);
+            document.getElementById('debug').innerHTML += '<br>錯誤: ' + e.error.message;
+        });
+    </script>
+    
+    <script src="script.js"></script>
+</body>
+</html>

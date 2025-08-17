@@ -2,53 +2,95 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>VT ETF 投資理財模擬器 - 改良版</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="game">
-<h2>🎯 VT ETF 投資理財模擬器 - 改良版</h2>
+    <!-- 標題區域 -->
+    <header class="game-header">
+        <h1>🎯 VT ETF 投資理財模擬器</h1>
+        <p class="subtitle">體驗長期投資的複利威力</p>
+    </header>
 
-<div class="status-grid" id="statusGrid"></div>
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+        <!-- 左側：狀態和圖表 -->
+        <div class="left-panel">
+            <!-- 狀態卡片 -->
+            <section class="status-section">
+                <h3>📊 財務狀況</h3>
+                <div class="status-grid" id="statusGrid"></div>
+            </section>
 
-<div class="control-panel">
-    <h3>⚙️ 控制面板</h3>
-    <div style="margin-bottom: 15px;">
-        <button id="toggleTimeBtn">⏸️ 暫停時間</button>
-        <button id="speedControl">⚡ 加速模式</button>
-        <span class="speed-indicator" id="speedIndicator">速度: 1x</span>
+            <!-- 圖表區域 -->
+            <section class="chart-section">
+                <div class="chart-header">
+                    <h3>📈 投資分析</h3>
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchChart('wealth', this)">💎 淨值變化</div>
+                        <div class="tab" onclick="switchChart('allocation', this)">📊 資產配置</div>
+                        <div class="tab" onclick="switchChart('performance', this)">📈 投資績效</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="moneyChart" height="100"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- 右側：控制和設定 -->
+        <div class="right-panel">
+            <!-- 時間控制 -->
+            <section class="control-section">
+                <h3>⏰ 時間控制</h3>
+                <div class="time-controls">
+                    <button id="toggleTimeBtn" class="primary-btn">▶️ 開始時間</button>
+                    <button id="speedControl" class="secondary-btn">⚡ 加速模式</button>
+                    <span class="speed-indicator" id="speedIndicator">速度: 1x</span>
+                </div>
+            </section>
+
+            <!-- 財務設定 -->
+            <section class="settings-section">
+                <h3>💰 財務設定</h3>
+                <div class="input-group">
+                    <div class="input-item">
+                        <label for="salaryInput">💼 每月薪水</label>
+                        <input type="number" id="salaryInput" value="30000" placeholder="輸入月薪">
+                    </div>
+                    <div class="input-item">
+                        <label for="expenseInput">💸 固定支出</label>
+                        <input type="number" id="expenseInput" value="15000" placeholder="輸入支出">
+                    </div>
+                    <div class="input-item">
+                        <label for="investInput">📈 每月投資</label>
+                        <input type="number" id="investInput" value="0" min="0" placeholder="輸入投資金額">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 操作按鈕 -->
+            <section class="actions-section">
+                <h3>⚙️ 操作</h3>
+                <div class="action-buttons">
+                    <button id="annualReviewBtn" class="action-btn review-btn">📊 年度回顧</button>
+                    <button id="withdrawBtn" class="action-btn withdraw-btn">💸 贖回投資</button>
+                </div>
+            </section>
+
+            <!-- 事件顯示 -->
+            <section class="events-section" id="eventsSection"></section>
+        </div>
     </div>
-    
-    <div class="input-group">
-        <label>
-            💰 每月薪水
-            <input type="number" id="salaryInput" value="30000">
-        </label>
-        <label>
-            📊 固定支出
-            <input type="number" id="expenseInput" value="15000">
-        </label>
-        <label>
-            📈 每月投資
-            <input type="number" id="investInput" value="0" min="0">
-        </label>
-    </div>
-    <button id="withdrawBtn" style="background: #ff9800; color: white;">💸 贖回投資</button>
-</div>
 
-<div class="events-section" id="eventsSection"></div>
-
-<div class="chart-container">
-    <div class="tabs">
-        <div class="tab active" onclick="switchChart('wealth', this)">💎 淨值變化</div>
-        <div class="tab" onclick="switchChart('allocation', this)">📊 資產配置</div>
-        <div class="tab" onclick="switchChart('performance', this)">📈 投資績效</div>
-    </div>
-    <canvas id="moneyChart" height="100"></canvas>
-</div>
-
-<div id="log"><strong>📝 歷史記錄：</strong></div>
+    <!-- 歷史記錄 -->
+    <section class="log-section">
+        <h3>📝 歷史記錄</h3>
+        <div id="log" class="log-content"><strong>遊戲準備就緒...</strong></div>
+    </section>
 </div>
 
 <script src="script.js"></script>
